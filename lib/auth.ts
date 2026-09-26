@@ -1,8 +1,8 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-import { AppError } from "@/lib/errors";
-import { type Role } from "@/types";
+import { AppError, ForbiddenError, UnauthorizedError } from "@/lib/errors";
+import { ROLES, type Role } from "@/types";
 
 const SESSION_COOKIE = "auth-session";
 const SESSION_EXPIRY = "7d";
@@ -76,4 +76,26 @@ export async function getSession(): Promise<SessionPayload | null> {
 export async function clearSession(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete(SESSION_COOKIE);
+}
+
+export async function requireAuth(): Promise<SessionPayload> {
+  const session = await getSession();
+  if (!session) {
+    throw new UnauthorizedError("Authentication required");
+  }
+  return session;
+}
+
+export async function requireRole(
+  allowedRoles: Role[]
+): Promise<SessionPayload> {
+  const session = await requireAuth();
+  if (!allowedRoles.includes(session.role)) {
+    throw new ForbiddenError("Insufficient permissions");
+  }
+  return session;
+}
+
+export async function requireSuperAdmin(): Promise<SessionPayload> {
+  return requireRole([ROLES.SUPER_ADMIN]);
 }

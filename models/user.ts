@@ -11,6 +11,12 @@ const userSchema = new mongoose.Schema(
       minlength: [2, "Name must be at least 2 characters"],
       maxlength: [100, "Name must be at most 100 characters"],
     },
+    fatherName: {
+      type: String,
+      trim: true,
+      minlength: [2, "Father name must be at least 2 characters"],
+      maxlength: [100, "Father name must be at most 100 characters"],
+    },
     email: {
       type: String,
       required: [true, "Email is required"],
@@ -47,6 +53,10 @@ const userSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    rejectionReason: {
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true,
@@ -69,11 +79,11 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-userSchema.index({ email: 1 }, { unique: true });
-
 export type UserDocument = InferSchemaType<typeof userSchema> & {
   role: Role;
   status: AccountStatus;
+  fatherName?: string;
+  rejectionReason?: string;
 };
 
 export const User: mongoose.Model<UserDocument> =

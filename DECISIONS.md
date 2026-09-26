@@ -95,3 +95,25 @@
 
 **Decision:** Use `yup` for server-side validation schemas.
 **Reason:** The MASTER_PROMPT specifies Yup for form validation. Using Yup for server-side validation as well ensures consistency between client and server validation. The schemas are reusable and type-safe via `yup.InferType`.
+
+## Phase 4 — Registration & Approval Foundation
+
+### 19. Role-specific domain models referencing central User model
+
+**Decision:** Maintain `User` as the sole authentication/account model, while creating dedicated `Student`, `Faculty`, and `Canteen` models that reference `user._id` via ObjectId.
+**Reason:** Separates authentication and credentials from domain-specific profile data. Prevents duplication of passwords, emails, and statuses while allowing role-specific fields (e.g. `studentId`, `employeeId`, `canteenName`, opening hours) to scale independently.
+
+### 20. Dedicated and unified registration API routes with public Super Admin block
+
+**Decision:** Provide dedicated endpoints (`/api/auth/register/student`, `/api/auth/register/faculty`, `/api/auth/register/canteen-owner`) alongside a unified `/api/auth/register` dispatcher, and explicitly block `SUPER_ADMIN` registration at the API level.
+**Reason:** Gives maximum API flexibility and clear validation error boundaries. Explicitly blocking `SUPER_ADMIN` from public registration prevents privilege escalation attacks.
+
+### 21. Strict registration state transitions with mandatory rejection reason
+
+**Decision:** Restrict approval and rejection state transitions strictly: approval only permits `PENDING` → `ACTIVE`, and rejection only permits `PENDING` → `REJECTED` and requires a non-empty `reason`.
+**Reason:** Prevents race conditions and unintended status mutations (e.g., accidental reactivation of suspended accounts via the registration approval handler). Recording the rejection reason satisfies the requirement that rejected users understand why their submission was turned down.
+
+### 22. Formik and Axios for client registration forms
+
+**Decision:** Use Formik for client-side form state management and Axios for API requests in the registration UI.
+**Reason:** Explicitly matches the technology stack requirements of the master prompt, enabling client-side validation using the same Yup schemas as the server-side route handlers.
