@@ -1,6 +1,6 @@
 # Project Status
 
-## Current Phase: Phase 4 — Registration & Approval Foundation (Complete)
+## Current Phase: Phase 5 — Canteen Owner Dashboard (Complete)
 
 ## Phase 1 — Foundation (Complete)
 
@@ -57,6 +57,20 @@
 - Professional registration UI at `/register` built with Formik, Yup, Axios, and shadcn/ui components (Card, Input, Label, Button)
 - Direct subroutes `/register/student`, `/register/faculty`, `/register/canteen-owner` with role parameter redirection
 - Standardized API response and error formatting (`lib/api.ts`)
+
+## Phase 5 — Canteen Owner Dashboard (Complete)
+
+- Continued the existing Canteen model and the in-progress active-owner authorization helper and Yup profile validation.
+- Added an authenticated owner canteen API at `/api/owner/canteen`:
+  - `GET` retrieves only the signed-in owner's canteen profile.
+  - `POST` creates a missing profile for the signed-in owner; newly created profiles remain unapproved/inactive pending the existing admin approval flow.
+  - `PATCH` updates editable profile fields for the signed-in owner's canteen only.
+- Server authorization checks role `CANTEEN_OWNER` and re-reads the User record to require status `ACTIVE`.
+- Added protected `/canteen-owner/dashboard` and `/canteen-owner/profile` pages.
+- Added responsive Formik/Yup profile management with loading, validation, success, and API error feedback.
+- Account identity, ownership, role, account status, canteen approval, active state, and verification documents cannot be changed through the profile API. Owner CNIC is only collected when creating a missing profile and is excluded from API responses and subsequent edits.
+- Cloudinary and image upload functionality remain out of scope; logo and cover fields accept URLs only.
+- No product, category, marketplace, cart, order, notification, payment, or analytics functionality was added.
 
 ## Project Structure
 
@@ -148,9 +162,12 @@ All checks pass:
 
 ## Remaining Work
 
-- Phase 5: Super Admin complete dashboard & platform management
-- Phase 6: Canteen Owner dashboard & menu management
-- Phase 7: Public marketplace & canteen browsing
-- Phase 8: Shopping cart & orders system
-- Phase 9: Notifications system
-- Phase 10: Professional improvements, testing, security, and deployment
+- Later phases: Super Admin dashboard, canteen menu management, marketplace, shopping cart and orders, notifications, and final production hardening.
+
+## Phase 5 Verification
+
+- Type check (`npm run type-check`): pass
+- Lint (`npm run lint`): pass
+- Production build (`npm run build`): pass
+- Unauthenticated GET, POST, and PATCH requests to `/api/owner/canteen`: rejected with HTTP 401.
+- Role/status and authenticated profile mutation checks require a configured MongoDB and authenticated test sessions; none are available in this workspace.

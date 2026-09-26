@@ -1,8 +1,10 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
+import { connectDB } from "@/lib/db";
 import { AppError, ForbiddenError, UnauthorizedError } from "@/lib/errors";
-import { ROLES, type Role } from "@/types";
+import { User } from "@/models/user";
+import { ACCOUNT_STATUS, ROLES, type Role } from "@/types";
 
 const SESSION_COOKIE = "auth-session";
 const SESSION_EXPIRY = "7d";
@@ -98,4 +100,29 @@ export async function requireRole(
 
 export async function requireSuperAdmin(): Promise<SessionPayload> {
   return requireRole([ROLES.SUPER_ADMIN]);
+}
+
+export async function requireActiveCanteenOwner(): Promise<{
+  session: SessionPayload;
+  user: InstanceType<typeof User>;
+}> {
+  const session = await requireRole([ROLES.CANTEEN_OWNER]);
+  await connectDB();
+  const user = await User.findById(session.userId);
+
+  if (!user) {
+    throw new UnauthorizedError("User account not found");
+  }
+
+  if (user.role !== ROLES.CANTEEN_OWNER) {
+    throw new ForbiddenError("Only canteen owners can access this resource.");
+  }
+
+  if (user.status !== ACCOUNT_STATUS.ACTIVE) {
+    throw new ForbiddenError(
+      `Account is ${user.status.toLowerCase()}. Only active canteen owners can access this resource.`
+    );
+  }
+
+  return { session, user };
 }

@@ -117,3 +117,15 @@
 
 **Decision:** Use Formik for client-side form state management and Axios for API requests in the registration UI.
 **Reason:** Explicitly matches the technology stack requirements of the master prompt, enabling client-side validation using the same Yup schemas as the server-side route handlers.
+
+## Phase 5 — Canteen Owner Dashboard
+
+### 23. Owner profile APIs derive ownership from the active server session
+
+**Decision:** Canteen profile GET, POST, and PATCH operations use the authenticated session's user ID, and the authorization helper verifies both the database role and active account status.
+**Reason:** A client-provided owner ID cannot authorize cross-owner access, and rechecking the database prevents stale session claims from retaining access after an account change.
+
+### 24. Canteen verification and activation fields stay outside owner profile edits
+
+**Decision:** Profile edits cannot change owner reference, CNIC, approval, active state, or verification documents. Creating a missing profile leaves it unapproved and inactive.
+**Reason:** These fields represent identity or administrative review state. They must not become self-approvable through owner profile management; CNIC is also omitted from profile API responses.
