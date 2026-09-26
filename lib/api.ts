@@ -4,6 +4,17 @@ import { ValidationError as YupValidationError } from "yup";
 import { AppError } from "@/lib/errors";
 
 export function handleApiError(error: unknown) {
+  if (error instanceof SyntaxError) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Request body must be valid JSON.",
+        code: "INVALID_JSON",
+      },
+      { status: 400 }
+    );
+  }
+
   if (error instanceof AppError) {
     return NextResponse.json(
       {

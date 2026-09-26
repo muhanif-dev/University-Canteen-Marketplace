@@ -129,3 +129,20 @@
 
 **Decision:** Profile edits cannot change owner reference, CNIC, approval, active state, or verification documents. Creating a missing profile leaves it unapproved and inactive.
 **Reason:** These fields represent identity or administrative review state. They must not become self-approvable through owner profile management; CNIC is also omitted from profile API responses.
+
+## Phase 6 — Marketplace
+
+### 25. Categories are canteen-scoped and uniquely named within each canteen
+
+**Decision:** Every category references one canteen and has a case-insensitive unique name constraint scoped to that canteen.
+**Reason:** A category should organize one owner's menu and must not be shared across unrelated canteens or duplicated with casing differences.
+
+### 26. Products and categories are deactivated instead of physically deleted
+
+**Decision:** Category delete requests set `isActive` to false and product delete requests set `isAvailable` to false. Marketplace queries exclude inactive categories and unavailable or out-of-stock products.
+**Reason:** Preserving records keeps product/category references intact for future platform history while removing them from public browsing.
+
+### 27. Marketplace browsing uses public, read-only endpoints
+
+**Decision:** Marketplace reads are public and return only approved/active canteens, active categories, and available products in stock; owner mutations still require active canteen-owner authorization.
+**Reason:** The master prompt describes a public marketplace while reserving account approval for later shopping actions; read-only data is explicitly projected to avoid private account fields.

@@ -1,6 +1,6 @@
 # Project Status
 
-## Current Phase: Phase 5 — Canteen Owner Dashboard (Complete)
+## Current Phase: Phase 6 — Marketplace (Complete)
 
 ## Phase 1 — Foundation (Complete)
 
@@ -71,6 +71,17 @@
 - Account identity, ownership, role, account status, canteen approval, active state, and verification documents cannot be changed through the profile API. Owner CNIC is only collected when creating a missing profile and is excluded from API responses and subsequent edits.
 - Cloudinary and image upload functionality remain out of scope; logo and cover fields accept URLs only.
 - No product, category, marketplace, cart, order, notification, payment, or analytics functionality was added.
+
+## Phase 6 — Marketplace (Complete)
+
+- Added canteen-scoped Category and Canteen/Category-linked Product Mongoose models with cached model registration, uniqueness/indexes, timestamps, and field constraints.
+- Added active-owner category and product CRUD APIs under `/api/owner/categories` and `/api/owner/products`; list and detail queries are scoped through the authenticated owner's canteen.
+- Category deletion deactivates records; product deletion marks products unavailable. Existing references remain intact.
+- Added public read-only marketplace APIs under `/api/marketplace` for approved/active canteens, active categories, available in-stock products, filters, search, and detail views.
+- Added owner pages for category and product management with Formik/Yup forms, Axios, loading/empty/error/success states, availability controls, and responsive layouts.
+- Added public marketplace browsing, canteen detail, and product detail pages. Product search is case-insensitive and safely escaped; filters cover canteen and category.
+- Product images and canteen logo/cover are displayed only as HTTP(S) URLs. No upload provider or secret is required.
+- Cart, checkout, orders, payments, notifications, reviews, ratings, and analytics remain out of scope.
 
 ## Project Structure
 
@@ -162,7 +173,9 @@ All checks pass:
 
 ## Remaining Work
 
-- Later phases: Super Admin dashboard, canteen menu management, marketplace, shopping cart and orders, notifications, and final production hardening.
+- Phase 7: Cart and orders.
+- Phase 8: Notifications.
+- Phase 9: Professional improvements, testing, security, and deployment.
 
 ## Phase 5 Verification
 
@@ -171,3 +184,13 @@ All checks pass:
 - Production build (`npm run build`): pass
 - Unauthenticated GET, POST, and PATCH requests to `/api/owner/canteen`: rejected with HTTP 401.
 - Role/status and authenticated profile mutation checks require a configured MongoDB and authenticated test sessions; none are available in this workspace.
+
+## Phase 6 Verification
+
+- Type check (`npm run type-check`): pass
+- Lint (`npm run lint`): pass
+- Production build (`npm run build`): pass
+- Unauthenticated category and product API requests (collection/detail GET and all mutations): rejected with HTTP 401.
+- Public marketplace shell and product detail shell pages: HTTP 200.
+- Yup validation: valid sample category/product accepted; empty, too-short, and overlong category names; negative price; invalid category ID; discount above price; and unsafe image protocol rejected.
+- Database-backed CRUD and marketplace data checks require a configured MongoDB and authenticated owner session; none are available in this workspace.

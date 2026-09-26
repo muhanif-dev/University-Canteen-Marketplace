@@ -17,7 +17,7 @@ export default function Home() {
             <a href="#about">Learn More</a>
           </Button>
           <Button size="lg" variant="outline" asChild>
-            <a href="#contact">Contact</a>
+            <a href="/marketplace">Browse Marketplace</a>
           </Button>
         </div>
       </div>

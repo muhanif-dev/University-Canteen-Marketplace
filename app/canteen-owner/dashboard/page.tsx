@@ -34,7 +34,11 @@ export default async function CanteenOwnerDashboardPage() {
           <h1 className="mt-2 text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="mt-2 text-muted-foreground">Manage your canteen profile and keep its information current.</p>
         </div>
-        <Button asChild variant="outline"><Link href="/canteen-owner/profile">Manage profile</Link></Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline"><Link href="/canteen-owner/profile">Manage profile</Link></Button>
+          <Button asChild variant="outline"><Link href="/canteen-owner/categories">Categories</Link></Button>
+          <Button asChild variant="outline"><Link href="/canteen-owner/products">Products</Link></Button>
+        </div>
       </div>
       {canteen ? (
         <Card>
