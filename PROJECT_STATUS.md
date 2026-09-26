@@ -1,8 +1,8 @@
 # Project Status
 
-## Current Phase: Phase 1 — Foundation (Complete)
+## Current Phase: Phase 2 — Database Foundation (Complete)
 
-## What Was Implemented
+## Phase 1 — Foundation (Complete)
 
 - Next.js App Router project structure
 - TypeScript with strict mode
@@ -14,6 +14,16 @@
 - Shared types: role definitions, account status, order status, customer type
 - Error infrastructure: AppError hierarchy
 - Minimal professional landing page
+
+## Phase 2 — Database Foundation (Complete)
+
+- MongoDB + Mongoose installed
+- Reusable MongoDB connection utility (`lib/db.ts`)
+- Connection caching to prevent duplicate connections during development hot reload
+- Environment variable `MONGODB_URI` required for connection
+- Safe error handling using existing `AppError` infrastructure
+- No credentials logged or exposed
+- `.env.example` updated with MongoDB URI examples
 
 ## Project Structure
 
@@ -30,6 +40,7 @@ University-Canteen-Marketplace/
 ├── hooks/
 │   └── .gitkeep
 ├── lib/
+│   ├── db.ts
 │   ├── errors.ts
 │   └── utils.ts
 ├── services/
@@ -54,11 +65,10 @@ University-Canteen-Marketplace/
 
 ## Verification Results
 
-See final report in chat. All three checks (type-check, lint, build) must pass.
+All three checks pass: type-check, lint, build.
 
 ## Remaining Work
 
-- Phase 2: Database foundation (MongoDB/Mongoose connection)
 - Phase 3: Authentication system
 - Phase 4: Registration system
 - Phase 5: Super Admin approval workflow
