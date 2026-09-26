@@ -1,6 +1,6 @@
 # Project Status
 
-## Current Phase: Phase 2 — Database Foundation (Complete)
+## Current Phase: Phase 3 — Authentication Foundation (Complete)
 
 ## Phase 1 — Foundation (Complete)
 
@@ -25,6 +25,18 @@
 - No credentials logged or exposed
 - `.env.example` updated with MongoDB URI examples
 
+## Phase 3 — Authentication Foundation (Complete)
+
+- User Mongoose model created (`models/user.ts`) with name, email, phone, passwordHash, role, status, timestamps
+- Password hashing and verification using bcryptjs (`lib/password.ts`)
+- JWT-based session management using jose (`lib/auth.ts`)
+- HTTP-only, secure, SameSite=lax session cookie
+- Session creation, reading, and clearing utilities
+- Yup validation schemas for login (`validations/auth.ts`)
+- AUTH_SECRET environment variable required for JWT signing
+- passwordHash excluded from JSON/Object serialization via schema transforms
+- No login/registration UI, no RBAC middleware, no dashboard pages
+
 ## Project Structure
 
 ```
@@ -40,15 +52,19 @@ University-Canteen-Marketplace/
 ├── hooks/
 │   └── .gitkeep
 ├── lib/
+│   ├── auth.ts
 │   ├── db.ts
 │   ├── errors.ts
+│   ├── password.ts
 │   └── utils.ts
+├── models/
+│   └── user.ts
 ├── services/
 │   └── .gitkeep
 ├── types/
 │   └── index.ts
 ├── validations/
-│   └── .gitkeep
+│   └── auth.ts
 ├── public/
 ├── .env.example
 ├── .gitignore
@@ -69,7 +85,6 @@ All three checks pass: type-check, lint, build.
 
 ## Remaining Work
 
-- Phase 3: Authentication system
 - Phase 4: Registration system
 - Phase 5: Super Admin approval workflow
 - Phase 6: Canteen Owner dashboard

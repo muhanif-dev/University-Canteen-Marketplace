@@ -63,3 +63,35 @@
 
 **Decision:** Throw `AppError` instances from `lib/db.ts` instead of raw `Error` objects.
 **Reason:** Reuses the Phase 1 error hierarchy. Database errors get a `DB_CONFIG_ERROR` or `DB_CONNECTION_ERROR` code and a 500 status code, keeping error handling consistent across the application.
+
+## Phase 3 — Authentication Foundation
+
+### 13. bcryptjs for password hashing
+
+**Decision:** Use `bcryptjs` instead of `bcrypt` or `argon2`.
+**Reason:** `bcryptjs` is a pure-JavaScript implementation that works natively on Windows without native compilation issues. It is well-maintained, widely used in the Node.js ecosystem, and provides strong security with configurable salt rounds (12 rounds used).
+
+### 14. jose for JWT session management
+
+**Decision:** Use `jose` library for JWT signing and verification instead of `jsonwebtoken`.
+**Reason:** `jose` is designed for modern JavaScript runtimes, Edge runtime compatibility, and uses the Web Crypto API. It works seamlessly with Next.js App Router and is actively maintained.
+
+### 15. HTTP-only JWT cookie session strategy
+
+**Decision:** Store the session as a JWT in an HTTP-only cookie rather than using server-side session storage.
+**Reason:** A stateless JWT cookie approach avoids the need for a session store, works well with serverless/edge deployment, and scales naturally. The cookie is HTTP-only (not readable by JavaScript), secure in production, and SameSite=lax to prevent CSRF. The JWT contains userId, role, and email only.
+
+### 16. `passwordHash` excluded from serialization
+
+**Decision:** Use Mongoose `toJSON` and `toObject` transforms to remove `passwordHash` from all serialized output. Also use `select: false` on the schema field.
+**Reason:** Defense in depth. Even if a User document is accidentally returned in an API response, the password hash will not be exposed. The `select: false` prevents it from being included in queries by default, and the transforms remove it if explicitly selected.
+
+### 17. Single User model with role field and hot-reload model caching
+
+**Decision:** Use a single `User` model with a `role` field rather than separate models per role for authentication credentials, and reuse `mongoose.models.User` during development.
+**Reason:** Authentication credentials (email, passwordHash) should live in one place. Future Student, Faculty, and Canteen models will reference the User document rather than duplicating auth fields. Reusing `mongoose.models.User` prevents `OverwriteModelError` when Next.js re-evaluates modules during hot reload.
+
+### 18. Yup for validation schemas
+
+**Decision:** Use `yup` for server-side validation schemas.
+**Reason:** The MASTER_PROMPT specifies Yup for form validation. Using Yup for server-side validation as well ensures consistency between client and server validation. The schemas are reusable and type-safe via `yup.InferType`.
