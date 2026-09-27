@@ -1,6 +1,6 @@
 # Project Status
 
-## Current Phase: Phase 7 — Cart & Orders (Complete)
+## Current Phase: Phase 8 — Notifications (Complete)
 
 ## Phase 1 — Foundation (Complete)
 
@@ -94,7 +94,18 @@
 - Pending customer cancellation and owner rejection restore stock transactionally. Owners can transition PENDING → ACCEPTED or REJECTED → (terminal), ACCEPTED → PREPARING → READY → COMPLETED; customers may cancel only their own PENDING orders.
 - Added cart, checkout, customer order history/detail, and canteen owner order management screens. Cash on Pickup is the only payment method; no payment collection is implemented.
 - MongoDB transactions require a replica set or mongos. The workspace has no MongoDB configuration, so transaction-backed operations could not be run against a database here; unsupported transaction deployments fail without applying partial changes.
-- Notifications and all later-phase features remain out of scope.
+- At Phase 7 completion, notifications and all later-phase features remained out of scope.
+
+## Phase 8 — Notifications (Complete)
+
+- Added a typed Notification model with recipient, strict event type, title/message, related entity/order references, read state, timestamps, and a unique event key.
+- Added recipient/time and recipient/read/time indexes for notification history and unread queries.
+- Added server-side notification APIs: paginated list, unread count, mark one as read, and mark all as read. Every operation derives the recipient from the authenticated session and scopes its database query to that recipient.
+- Integrated real order events into the existing Phase 7 MongoDB transactions: order placement notifies the canteen owner; accepted, rejected, preparing, ready, completed, and customer-cancelled order events notify the customer; customer cancellation also notifies the canteen owner.
+- Event notifications are created in the same transaction as order/status/stock changes. Deterministic unique event keys prevent duplicate records while preserving read state on retries.
+- Added an authenticated notification bell with an unread badge and recent-notification panel, plus `/notifications` with read/unread styling, mark-read actions, mark-all, load more, and order links to existing customer or owner pages.
+- Registration approval/rejection notifications were not added. Those Phase 4 handlers are non-transactional; coupling their state changes to transactional notifications would change the established approval workflow and its database requirements. The applicant approval path remains unchanged.
+- No real-time infrastructure or external notification service was added. Notifications load through normal API requests.
 
 ## Project Structure
 
@@ -186,7 +197,6 @@ All checks pass:
 
 ## Remaining Work
 
-- Phase 8: Notifications.
 - Phase 9: Professional improvements, testing, security, and deployment.
 
 ## Phase 5 Verification
@@ -214,3 +224,12 @@ All checks pass:
 - Production build (`npm run build`): pass
 - Unauthenticated cart, customer order, and owner order API requests (GET and mutations): rejected with HTTP 401.
 - Database-backed cart, order, stock, authorization, and transaction checks require MongoDB and authenticated test sessions; neither is configured in this workspace.
+
+## Phase 8 Verification
+
+- Type check (`npm run type-check`): pass
+- Lint (`npm run lint`): pass
+- Production build (`npm run build`): pass; notification API and `/notifications` routes included.
+- Production server unauthenticated requests to `GET /api/notifications`, `GET /api/notifications/unread-count`, `PATCH /api/notifications/read-all`, and `PATCH /api/notifications/[id]/read`: all returned HTTP 401.
+- Yup pagination validation: defaults, numeric string parsing, whole-number enforcement, lower/upper bounds, and malformed values passed direct checks.
+- MongoDB-backed event creation, recipient ownership boundaries, unread counts, read updates, and transaction/idempotency behavior were not exercised because `.env`/MongoDB and authenticated test sessions are not configured.

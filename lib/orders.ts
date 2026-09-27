@@ -7,8 +7,19 @@ import { Canteen } from "@/models/canteen";
 import { Category } from "@/models/category";
 import { Order } from "@/models/order";
 import { Product } from "@/models/product";
-import { ORDER_STATUS, type CustomerType, type OrderStatus } from "@/types";
+import {
+  ORDER_STATUS,
+  NOTIFICATION_ENTITY_TYPE,
+  NOTIFICATION_TYPE,
+  type CustomerType,
+  type OrderStatus,
+} from "@/types";
 import { effectiveUnitPriceCents, fromCents, toCents } from "@/lib/money";
+import {
+  createNotification,
+  notifyCanteenOwnerOfNewOrder,
+  notifyOrderCustomer,
+} from "@/lib/notifications";
 
 const OWNER_TRANSITIONS: Partial<Record<OrderStatus, OrderStatus[]>> = {
   [ORDER_STATUS.PENDING]: [ORDER_STATUS.ACCEPTED, ORDER_STATUS.REJECTED],
@@ -154,6 +165,7 @@ export async function createOrderFromCart(
       ],
       { session }
     );
+    await notifyCanteenOwnerOfNewOrder(canteen.owner, order._id, session);
     const cartDelete = await Cart.deleteOne({ _id: cart._id, customer: customerId }, { session });
     if (cartDelete.deletedCount !== 1) {
       throw new ConflictError("Your cart changed while the order was being placed. Please retry.");
@@ -190,6 +202,7 @@ export async function updateOwnerOrderStatus(
   return withMongoTransaction(async (session) => {
     const order = await Order.findOne({ _id: orderId, canteen: canteenId }).session(session);
     if (!order) throw new NotFoundError("Order not found");
+    if (!order.customer) throw new ConflictError("This order has no customer record.");
     if (!OWNER_TRANSITIONS[order.status as OrderStatus]?.includes(nextStatus)) {
       throw new ConflictError("That order status transition is not allowed.");
     }
@@ -198,6 +211,25 @@ export async function updateOwnerOrderStatus(
     }
     order.status = nextStatus;
     await order.save({ session });
+    if (nextStatus !== ORDER_STATUS.REJECTED) {
+      const eventTypeByStatus: Partial<Record<OrderStatus, (typeof NOTIFICATION_TYPE)[keyof typeof NOTIFICATION_TYPE]>> = {
+        [ORDER_STATUS.ACCEPTED]: NOTIFICATION_TYPE.ORDER_ACCEPTED,
+        [ORDER_STATUS.PREPARING]: NOTIFICATION_TYPE.ORDER_PREPARING,
+        [ORDER_STATUS.READY]: NOTIFICATION_TYPE.ORDER_READY,
+        [ORDER_STATUS.COMPLETED]: NOTIFICATION_TYPE.ORDER_COMPLETED,
+      };
+      const eventType = eventTypeByStatus[nextStatus];
+      if (eventType) {
+        await notifyOrderCustomer(order.customer, order._id, eventType, session);
+      }
+    } else {
+      await notifyOrderCustomer(
+        order.customer,
+        order._id,
+        NOTIFICATION_TYPE.ORDER_REJECTED,
+        session
+      );
+    }
     return order;
   });
 }
@@ -209,12 +241,34 @@ export async function cancelCustomerOrder(
   return withMongoTransaction(async (session) => {
     const order = await Order.findOne({ _id: orderId, customer: customerId }).session(session);
     if (!order) throw new NotFoundError("Order not found");
+    if (!order.customer) throw new ConflictError("This order has no customer record.");
     if (order.status !== ORDER_STATUS.PENDING) {
       throw new ConflictError("Only pending orders can be cancelled.");
     }
     await restoreOrderStock(order, session);
     order.status = ORDER_STATUS.CANCELLED;
     await order.save({ session });
+    const canteen = await Canteen.findById(order.canteen)
+      .select("owner")
+      .session(session);
+    if (!canteen) throw new ConflictError("The canteen for this order could not be found.");
+    const shortId = order._id.toString().slice(-6).toUpperCase();
+    await createNotification({
+      recipient: canteen.owner,
+      type: NOTIFICATION_TYPE.ORDER_CANCELLED,
+      title: "Customer cancelled an order",
+      message: `A pending order (#${shortId}) was cancelled by the customer.`,
+      entityType: NOTIFICATION_ENTITY_TYPE.ORDER,
+      entityId: order._id,
+      relatedOrder: order._id,
+      session,
+    });
+    await notifyOrderCustomer(
+      order.customer,
+      order._id,
+      NOTIFICATION_TYPE.ORDER_CANCELLED,
+      session
+    );
     return order;
   });
 }

@@ -173,3 +173,25 @@
 
 **Decision:** Store `CASH_ON_PICKUP` on every order; do not add payment-status state or payment processing.
 **Reason:** The master prompt specifies Cash on Pickup as the initial method and defers online payment functionality.
+
+## Phase 8 — Notifications
+
+### 33. Notification events are persisted with strict types and recipient-scoped indexes
+
+**Decision:** Store notifications in a dedicated collection with a typed event enum, recipient reference, optional related entity/order references, read state, timestamps, and a unique event key. Index recipient with creation time and recipient with read state and creation time.
+**Reason:** These fields support the actual recent-history and unread-count queries while keeping event types constrained and allowing related order navigation without embedding order documents.
+
+### 34. Order notifications share the existing order transactions
+
+**Decision:** Create order notifications inside the Phase 7 transaction that creates an order, changes its status, or cancels it. Resolve customer recipients from the order and owner recipients from the order's canteen.
+**Reason:** A committed order event should not be missing its notification, and a rolled-back order event should not leave a notification. This preserves Phase 7 stock and state consistency. MongoDB must support transactions as already required by Phase 7.
+
+### 35. Notification APIs always derive the recipient from the session
+
+**Decision:** List, unread count, mark-one-read, and mark-all-read handlers use the authenticated session user ID in their database filters. A notification not owned by that user returns 404.
+**Reason:** Client-provided ownership is never authoritative; scoping reads and writes in the database prevents cross-account access and avoids revealing whether another user's notification exists.
+
+### 36. Registration decisions remain outside Phase 8 event integration
+
+**Decision:** Do not add approval/rejection notifications to the existing Phase 4 registration handlers in this phase.
+**Reason:** Those handlers currently update account and canteen approval state without a transaction. Making notification delivery atomic would require changing their established workflow and introduce a replica-set/mongos requirement for registration. Order notifications cover the core events without widening that workflow.
