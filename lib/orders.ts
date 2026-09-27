@@ -15,6 +15,7 @@ import {
   type OrderStatus,
 } from "@/types";
 import { effectiveUnitPriceCents, fromCents, toCents } from "@/lib/money";
+import { MAX_CART_LINES } from "@/lib/cart";
 import {
   createNotification,
   notifyCanteenOwnerOfNewOrder,
@@ -77,6 +78,9 @@ export async function createOrderFromCart(
     const cart = await Cart.findOne({ customer: customerId }).session(session);
     if (!cart || cart.items.length === 0) {
       throw new ConflictError("Your cart is empty.");
+    }
+    if (cart.items.length > MAX_CART_LINES) {
+      throw new ConflictError(`An order can contain at most ${MAX_CART_LINES} products.`);
     }
 
     const canteen = await Canteen.findOne({

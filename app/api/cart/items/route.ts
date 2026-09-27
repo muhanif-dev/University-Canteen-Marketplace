@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 
 import { apiSuccess, handleApiError } from "@/lib/api";
 import { requireActiveCustomer } from "@/lib/auth";
-import { getCartSummary, getSellableProduct } from "@/lib/cart";
+import { getCartSummary, getSellableProduct, MAX_CART_LINES } from "@/lib/cart";
 import { ConflictError } from "@/lib/errors";
 import { Cart } from "@/models/cart";
 import { addCartItemSchema } from "@/validations/orders";
@@ -39,7 +39,12 @@ export async function POST(request: NextRequest) {
       throw new ConflictError("Requested quantity exceeds available stock.");
     }
     if (item) item.quantity = nextQuantity;
-    else cart.items.push({ product: product._id, quantity: input.quantity });
+    else {
+      if (cart.items.length >= MAX_CART_LINES) {
+        throw new ConflictError(`A cart can contain at most ${MAX_CART_LINES} products.`);
+      }
+      cart.items.push({ product: product._id, quantity: input.quantity });
+    }
     await cart.save();
 
     return apiSuccess(await getCartSummary(user._id), 200, "Added to cart.");

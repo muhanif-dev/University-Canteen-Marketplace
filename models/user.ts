@@ -23,12 +23,14 @@ const userSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       lowercase: true,
+      maxlength: [254, "Email address is too long"],
       match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please enter a valid email"],
     },
     phone: {
       type: String,
       required: [true, "Phone number is required"],
       trim: true,
+      maxlength: [32, "Phone number is too long"],
     },
     passwordHash: {
       type: String,

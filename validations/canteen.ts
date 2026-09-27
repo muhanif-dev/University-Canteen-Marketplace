@@ -45,12 +45,14 @@ export const canteenProfileSchema = yup.object({
     .trim()
     .max(2048, "Logo URL is too long")
     .url("Enter a valid image URL")
+    .test("http-url", "Logo URL must use HTTP or HTTPS", (value) => !value || /^https?:\/\//i.test(value))
     .default(""),
   coverImageUrl: yup
     .string()
     .trim()
     .max(2048, "Cover image URL is too long")
     .url("Enter a valid image URL")
+    .test("http-url", "Cover image URL must use HTTP or HTTPS", (value) => !value || /^https?:\/\//i.test(value))
     .default(""),
 });
 

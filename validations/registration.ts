@@ -1,5 +1,35 @@
 import * as yup from "yup";
 
+const passwordSchema = yup
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .max(72, "Password cannot exceed 72 characters")
+  .test(
+    "bcrypt-byte-length",
+    "Password must not exceed 72 UTF-8 bytes",
+    (value) => !value || new TextEncoder().encode(value).length <= 72
+  )
+  .required("Password is required");
+
+const optionalHttpUrl = (label: string) =>
+  yup
+    .string()
+    .trim()
+    .max(2048, `${label} URL is too long`)
+    .url(`Enter a valid ${label.toLowerCase()} URL`)
+    .test(
+      "http-url",
+      `${label} URL must use HTTP or HTTPS`,
+      (value) => !value || /^https?:\/\//i.test(value)
+    )
+    .default("");
+
+const phoneSchema = yup
+  .string()
+  .trim()
+  .matches(/^[+()\d\s.-]{7,32}$/, "Enter a valid phone number")
+  .required("Phone number is required");
+
 export const studentRegistrationSchema = yup.object({
   name: yup
     .string()
@@ -18,45 +48,42 @@ export const studentRegistrationSchema = yup.object({
     .trim()
     .lowercase()
     .email("Please enter a valid email address")
+    .max(254, "Email address is too long")
     .required("Email is required"),
-  phone: yup
-    .string()
-    .trim()
-    .min(7, "Phone number must be at least 7 characters")
-    .required("Phone number is required"),
-  password: yup
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .required("Password is required"),
+  phone: phoneSchema,
+  password: passwordSchema,
   studentId: yup
     .string()
     .trim()
+    .max(50, "Student ID must be at most 50 characters")
     .required("Student ID is required"),
   department: yup
     .string()
     .trim()
+    .max(100, "Department must be at most 100 characters")
     .required("Department is required"),
   program: yup
     .string()
     .trim()
+    .max(100, "Program must be at most 100 characters")
     .required("Program is required"),
   semester: yup
     .string()
     .trim()
+    .max(30, "Semester must be at most 30 characters")
     .required("Semester is required"),
   section: yup
     .string()
     .trim()
+    .max(30, "Section must be at most 30 characters")
     .required("Section is required"),
-  studentCardUrl: yup
-    .string()
-    .trim()
-    .default(""),
+  studentCardUrl: optionalHttpUrl("Student card"),
   universityEmail: yup
     .string()
     .trim()
     .lowercase()
     .email("Please enter a valid university email")
+    .max(254, "University email is too long")
     .default(""),
 });
 
@@ -82,40 +109,32 @@ export const facultyRegistrationSchema = yup.object({
     .trim()
     .lowercase()
     .email("Please enter a valid email address")
+    .max(254, "Email address is too long")
     .required("Email is required"),
-  phone: yup
-    .string()
-    .trim()
-    .min(7, "Phone number must be at least 7 characters")
-    .required("Phone number is required"),
-  password: yup
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .required("Password is required"),
+  phone: phoneSchema,
+  password: passwordSchema,
   employeeId: yup
     .string()
     .trim()
+    .max(50, "Employee ID must be at most 50 characters")
     .required("Employee ID is required"),
   department: yup
     .string()
     .trim()
+    .max(100, "Department must be at most 100 characters")
     .required("Department is required"),
   designation: yup
     .string()
     .trim()
+    .max(100, "Designation must be at most 100 characters")
     .required("Designation is required"),
   facultyType: yup
     .string()
     .trim()
+    .max(60, "Faculty type must be at most 60 characters")
     .required("Faculty Type is required"),
-  universityIdCardUrl: yup
-    .string()
-    .trim()
-    .default(""),
-  employmentVerificationUrl: yup
-    .string()
-    .trim()
-    .default(""),
+  universityIdCardUrl: optionalHttpUrl("University ID card"),
+  employmentVerificationUrl: optionalHttpUrl("Employment verification"),
 });
 
 export type FacultyRegistrationInput = yup.InferType<
@@ -138,23 +157,17 @@ export const canteenOwnerRegistrationSchema = yup.object({
   cnic: yup
     .string()
     .trim()
-    .min(10, "CNIC must be at least 10 characters")
+    .matches(/^\d{5}-?\d{7}-?\d{1}$/, "Enter a valid 13-digit CNIC")
     .required("CNIC is required"),
-  phone: yup
-    .string()
-    .trim()
-    .min(7, "Phone number must be at least 7 characters")
-    .required("Phone number is required"),
+  phone: phoneSchema,
   email: yup
     .string()
     .trim()
     .lowercase()
     .email("Please enter a valid email address")
+    .max(254, "Email address is too long")
     .required("Email is required"),
-  password: yup
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .required("Password is required"),
+  password: passwordSchema,
   canteenName: yup
     .string()
     .trim()
@@ -164,34 +177,35 @@ export const canteenOwnerRegistrationSchema = yup.object({
   description: yup
     .string()
     .trim()
+    .min(5, "Canteen description must be at least 5 characters")
+    .max(1000, "Canteen description must be at most 1000 characters")
     .required("Canteen description is required"),
   location: yup
     .string()
     .trim()
+    .max(200, "Location must be at most 200 characters")
     .required("Location is required"),
   building: yup
     .string()
     .trim()
+    .max(100, "Building / Block must be at most 100 characters")
     .required("Building / Block is required"),
   openingTime: yup
     .string()
     .trim()
+    .matches(/^([01]\d|2[0-3]):[0-5]\d$/, "Use 24-hour time (HH:MM)")
     .required("Opening Time is required"),
   closingTime: yup
     .string()
     .trim()
+    .matches(/^([01]\d|2[0-3]):[0-5]\d$/, "Use 24-hour time (HH:MM)")
     .required("Closing Time is required"),
-  logoUrl: yup
-    .string()
-    .trim()
-    .default(""),
-  coverImageUrl: yup
-    .string()
-    .trim()
-    .default(""),
+  logoUrl: optionalHttpUrl("Logo"),
+  coverImageUrl: optionalHttpUrl("Cover image"),
   verificationDocuments: yup
     .array()
-    .of(yup.string().required())
+    .of(optionalHttpUrl("Verification document"))
+    .max(10, "You can provide at most 10 verification documents")
     .default([]),
 });
 

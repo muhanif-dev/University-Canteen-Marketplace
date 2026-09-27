@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "node --require ./tests/ts-require-hook.cjs --test",
     "lint": "eslint",
     "type-check": "tsc --noEmit"
   },

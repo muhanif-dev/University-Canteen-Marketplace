@@ -11,6 +11,7 @@ const cartItemSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 1,
+      max: 1000000,
       validate: { validator: Number.isInteger, message: "Quantity must be a whole number" },
     },
   },
@@ -24,15 +25,20 @@ const cartSchema = new mongoose.Schema(
       ref: "User",
       required: true,
       unique: true,
-      index: true,
     },
     canteen: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Canteen",
       required: true,
-      index: true,
     },
-    items: { type: [cartItemSchema], default: [] },
+    items: {
+      type: [cartItemSchema],
+      default: [],
+      validate: {
+        validator: (items: unknown[]) => items.length <= 100,
+        message: "A cart can contain at most 100 products",
+      },
+    },
   },
   { timestamps: true, optimisticConcurrency: true }
 );

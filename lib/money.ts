@@ -1,8 +1,17 @@
+import { ConflictError } from "@/lib/errors";
+
 export function toCents(amount: number): number {
-  return Math.round(amount * 100);
+  const cents = Math.round(amount * 100);
+  if (!Number.isFinite(amount) || amount < 0 || !Number.isSafeInteger(cents)) {
+    throw new ConflictError("A price is outside the supported range.");
+  }
+  return cents;
 }
 
 export function fromCents(cents: number): number {
+  if (!Number.isSafeInteger(cents) || cents < 0) {
+    throw new ConflictError("The cart total is outside the supported range.");
+  }
   return cents / 100;
 }
 

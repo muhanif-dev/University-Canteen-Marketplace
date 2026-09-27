@@ -115,6 +115,9 @@ function RegisterContent() {
           Protected university marketplace. Submitted accounts start in PENDING
           status until verified.
         </p>
+        <p className="mt-3 text-center text-sm text-muted-foreground">
+          Already approved? <Link href="/login" className="font-medium text-primary underline-offset-4 hover:underline">Sign in</Link>
+        </p>
       </div>
     </div>
   );

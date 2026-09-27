@@ -18,6 +18,7 @@ const orderItemSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 1,
+      max: 1000000,
       validate: { validator: Number.isInteger, message: "Quantity must be a whole number" },
     },
     subtotal: { type: Number, required: true, min: 0 },
@@ -31,7 +32,6 @@ const orderSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
     customerType: {
       type: String,
@@ -42,13 +42,15 @@ const orderSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Canteen",
       required: true,
-      index: true,
     },
     canteenName: { type: String, required: true, trim: true, maxlength: 100 },
     items: {
       type: [orderItemSchema],
       required: true,
-      validate: { validator: (items: unknown[]) => items.length > 0, message: "An order must contain an item" },
+      validate: {
+        validator: (items: unknown[]) => items.length > 0 && items.length <= 100,
+        message: "An order must contain between 1 and 100 items",
+      },
     },
     subtotal: { type: Number, required: true, min: 0 },
     total: { type: Number, required: true, min: 0 },
@@ -57,7 +59,6 @@ const orderSchema = new mongoose.Schema(
       enum: Object.values(ORDER_STATUS),
       default: ORDER_STATUS.PENDING,
       required: true,
-      index: true,
     },
     paymentMethod: {
       type: String,

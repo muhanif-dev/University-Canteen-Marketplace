@@ -27,14 +27,39 @@ export function handleApiError(error: unknown) {
     );
   }
 
-  if (error instanceof AppError) {
+  if (error instanceof mongoose.Error.CastError) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
-        code: error.code,
+        error: "A provided identifier or value is invalid.",
+        code: "INVALID_VALUE",
       },
-      { status: error.statusCode }
+      { status: 400 }
+    );
+  }
+
+  if (error instanceof mongoose.Error.ValidationError) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "The submitted information is invalid.",
+        code: "DATA_VALIDATION_FAILED",
+      },
+      { status: 400 }
+    );
+  }
+
+  if (error instanceof AppError) {
+    const isSafeToExpose = error.isOperational;
+    return NextResponse.json(
+      {
+        success: false,
+        error: isSafeToExpose
+          ? error.message
+          : "An unexpected error occurred. Please try again later.",
+        code: isSafeToExpose ? error.code : "INTERNAL_ERROR",
+      },
+      { status: isSafeToExpose ? error.statusCode : 500 }
     );
   }
 

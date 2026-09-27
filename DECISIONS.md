@@ -195,3 +195,25 @@
 
 **Decision:** Do not add approval/rejection notifications to the existing Phase 4 registration handlers in this phase.
 **Reason:** Those handlers currently update account and canteen approval state without a transaction. Making notification delivery atomic would require changing their established workflow and introduce a replica-set/mongos requirement for registration. Order notifications cover the core events without widening that workflow.
+
+## Phase 9 — Production readiness
+
+### 37. Protected requests revalidate active role and status from MongoDB
+
+**Decision:** Session tokens contain only the user ID and role; every protected API re-reads the current account and requires its database role to match and status to be ACTIVE.
+**Reason:** Revoked or changed accounts must lose access immediately, and tokens should not carry unnecessary personal information.
+
+### 38. Authentication secret and bcrypt input have explicit limits
+
+**Decision:** Require at least 32 UTF-8 bytes for `AUTH_SECRET` and reject passwords exceeding bcrypt's 72-byte input limit.
+**Reason:** This prevents weak session signing configuration and avoids bcrypt silently treating overlong passwords as equivalent.
+
+### 39. Bound untrusted record sizes and reject unsafe URL schemes
+
+**Decision:** Registration fields, verification URL lists, cart/order line counts, and quantities are bounded; image/document URLs accept HTTP(S) only.
+**Reason:** These are small validation and resource-exhaustion protections that preserve existing workflows.
+
+### 40. Keep order and notification consistency transaction-based
+
+**Decision:** Preserve MongoDB transaction use for checkout, stock changes, status notifications, and cancellation. Production deployment requires MongoDB Atlas or another replica set/mongos.
+**Reason:** Replacing transactions would risk partial order, stock, cart, and notification state.

@@ -27,13 +27,20 @@ function getSecret(): Uint8Array {
     );
   }
 
+  if (new TextEncoder().encode(secret).length < 32) {
+    throw new AppError(
+      "AUTH_SECRET must contain at least 32 bytes of secret material.",
+      500,
+      "AUTH_CONFIG_ERROR"
+    );
+  }
+
   return new TextEncoder().encode(secret);
 }
 
 export interface SessionPayload {
   userId: string;
   role: Role;
-  email: string;
 }
 
 export async function createSession(payload: SessionPayload): Promise<void> {
@@ -62,17 +69,18 @@ export async function getSession(): Promise<SessionPayload | null> {
     return null;
   }
 
+  const secret = getSecret();
   try {
-    const { payload } = await jwtVerify(token, getSecret());
+    const { payload } = await jwtVerify(token, secret);
     if (
       typeof payload.userId === "string" &&
+      /^[a-f\d]{24}$/i.test(payload.userId) &&
       typeof payload.role === "string" &&
-      typeof payload.email === "string"
+      Object.values(ROLES).includes(payload.role as Role)
     ) {
       return {
         userId: payload.userId,
         role: payload.role as Role,
-        email: payload.email,
       };
     }
     return null;
@@ -86,11 +94,33 @@ export async function clearSession(): Promise<void> {
   cookieStore.delete(SESSION_COOKIE);
 }
 
-export async function requireAuth(): Promise<SessionPayload> {
+async function getActiveSessionUser(): Promise<{
+  session: SessionPayload;
+  user: InstanceType<typeof User>;
+}> {
   const session = await getSession();
   if (!session) {
     throw new UnauthorizedError("Authentication required");
   }
+
+  await connectDB();
+  const user = await User.findById(session.userId);
+  if (!user) throw new UnauthorizedError("User account not found");
+  if (user.role !== session.role) {
+    throw new UnauthorizedError("Your session is no longer valid. Please sign in again.");
+  }
+  if (user.status !== ACCOUNT_STATUS.ACTIVE) {
+    throw new ForbiddenError("Your account is not active.");
+  }
+
+  return {
+    session: { userId: user._id.toString(), role: user.role },
+    user,
+  };
+}
+
+export async function requireAuth(): Promise<SessionPayload> {
+  const { session } = await getActiveSessionUser();
   return session;
 }
 
@@ -112,24 +142,10 @@ export async function requireActiveCanteenOwner(): Promise<{
   session: SessionPayload;
   user: InstanceType<typeof User>;
 }> {
-  const session = await requireRole([ROLES.CANTEEN_OWNER]);
-  await connectDB();
-  const user = await User.findById(session.userId);
-
-  if (!user) {
-    throw new UnauthorizedError("User account not found");
-  }
-
+  const { session, user } = await getActiveSessionUser();
   if (user.role !== ROLES.CANTEEN_OWNER) {
     throw new ForbiddenError("Only canteen owners can access this resource.");
   }
-
-  if (user.status !== ACCOUNT_STATUS.ACTIVE) {
-    throw new ForbiddenError(
-      `Account is ${user.status.toLowerCase()}. Only active canteen owners can access this resource.`
-    );
-  }
-
   return { session, user };
 }
 
@@ -138,19 +154,7 @@ export async function requireActiveCustomer(): Promise<{
   user: InstanceType<typeof User>;
   customerType: CustomerType;
 }> {
-  const session = await requireRole([ROLES.STUDENT, ROLES.FACULTY]);
-  await connectDB();
-  const user = await User.findById(session.userId);
-
-  if (!user) {
-    throw new UnauthorizedError("User account not found");
-  }
-
-  if (user.status !== ACCOUNT_STATUS.ACTIVE) {
-    throw new ForbiddenError(
-      "Only active students and faculty members can use shopping features."
-    );
-  }
+  const { session, user } = await getActiveSessionUser();
 
   const customerType =
     user.role === ROLES.STUDENT

@@ -1,6 +1,6 @@
 # Project Status
 
-## Current Phase: Phase 8 — Notifications (Complete)
+## Current Phase: Phase 9 — Professionalization, Testing, Security & Deployment Readiness (Complete)
 
 ## Phase 1 — Foundation (Complete)
 
@@ -106,6 +106,31 @@
 - Added an authenticated notification bell with an unread badge and recent-notification panel, plus `/notifications` with read/unread styling, mark-read actions, mark-all, load more, and order links to existing customer or owner pages.
 - Registration approval/rejection notifications were not added. Those Phase 4 handlers are non-transactional; coupling their state changes to transactional notifications would change the established approval workflow and its database requirements. The applicant approval path remains unchanged.
 - No real-time infrastructure or external notification service was added. Notifications load through normal API requests.
+
+## Phase 9 — Professionalization, Testing, Security & Deployment Readiness (Complete)
+
+- Audited authentication, role checks, ownership-scoped routes, server-side input validation, field whitelists, order pricing/stock logic, notification recipient scoping, API errors, environment configuration, indexes, and frontend unsafe HTML patterns.
+- Added login/logout endpoints and a sign-in page to complete the existing password/session foundation. Sessions contain only user ID and role; protected APIs re-read the account and reject role changes or inactive accounts.
+- Enforced a minimum 32-byte `AUTH_SECRET`, bcrypt-compatible password length, bounded registration/cart/order input, safe HTTP(S) image/verification URLs, and safe API error responses.
+- Added standard security headers and resilient cached MongoDB connections; retained transaction-based order and notification changes.
+- Removed redundant model indexes where compound or unique indexes already cover actual queries.
+- Added a built-in Node test-runner suite for request validation and password hashing; no dependency was added.
+- Added deployment and project documentation in `README.md`; `.env.example` remains placeholders only.
+- `npm audit` reported zero vulnerabilities. `npm outdated` identified newer releases outside the project's declared version ranges; no dependency upgrades were warranted for this finalization.
+- No `.env`, MongoDB service, replica set, or authenticated test accounts were available. Database CRUD, transaction behavior, and cross-user authorization were not exercised in this phase; prior phase unauthenticated API checks are recorded above.
+- Deployment was not performed. Intended target remains Vercel + MongoDB Atlas.
+
+### Phase 9 Verification
+
+- `npm test`: PASS (5 tests; validation rules and bcrypt hash/verify behavior).
+- `npm run type-check`: PASS.
+- `npm run lint`: PASS.
+- `npm run build`: PASS; production build includes login/logout routes and `/login`.
+- `npm audit`: PASS, zero vulnerabilities.
+- `npm outdated`: newer latest releases exist for @types/node, eslint, React/React DOM, and TypeScript; installed versions satisfy declared ranges and no upgrades were made.
+- Production server smoke checks: `/login` returned 200; logout returned 200 and expired the session cookie; configured security headers were present; unauthenticated `/api/owner/canteen` returned 401.
+- `git diff --check`: PASS.
+- API route and ownership boundaries received source review; cross-account runtime tests require configured database fixtures and remain unverified.
 
 ## Project Structure
 

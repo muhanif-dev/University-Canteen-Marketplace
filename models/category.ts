@@ -6,7 +6,6 @@ const categorySchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Canteen",
       required: [true, "Canteen reference is required"],
-      index: true,
     },
     name: {
       type: String,

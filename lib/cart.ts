@@ -7,6 +7,8 @@ import { Product } from "@/models/product";
 import { ConflictError, NotFoundError } from "@/lib/errors";
 import { effectiveUnitPriceCents, fromCents } from "@/lib/money";
 
+export const MAX_CART_LINES = 100;
+
 export async function getSellableProduct(productId: string) {
   if (!mongoose.isValidObjectId(productId)) {
     throw new NotFoundError("Product not found");
