@@ -146,3 +146,30 @@
 
 **Decision:** Marketplace reads are public and return only approved/active canteens, active categories, and available products in stock; owner mutations still require active canteen-owner authorization.
 **Reason:** The master prompt describes a public marketplace while reserving account approval for later shopping actions; read-only data is explicitly projected to avoid private account fields.
+
+## Phase 7 — Cart & Orders
+
+### 28. Each customer cart holds items from one canteen and stores no price snapshots
+
+**Decision:** Enforce one canteen per cart. Cart lines store only product references and quantities; current prices are re-read for display and checkout.
+**Reason:** One order has one fulfiller, and avoiding cart prices prevents stale or client-controlled price totals. Customers clear the cart before switching canteens.
+
+### 29. Orders snapshot fulfillment and pricing details; order creation is transactional
+
+**Decision:** Orders keep product/category/canteen name and price snapshots. Order creation conditionally decrements stock, creates the order, and clears the cart in one MongoDB transaction.
+**Reason:** Historical orders remain meaningful after catalog edits, while transaction rollback protects stock and cart consistency during errors or concurrent checkout attempts.
+
+### 30. Stock is reserved at checkout and restored on pending cancellation or rejection
+
+**Decision:** Reserve stock with atomic conditional decrements when an order is placed. Restore it when a customer cancels a pending order or an owner rejects a pending order.
+**Reason:** This prevents two buyers from ordering the last unit and avoids keeping stock reserved for terminal orders.
+
+### 31. Order status transitions follow the pickup workflow
+
+**Decision:** Owners may move PENDING to ACCEPTED or REJECTED, then ACCEPTED to PREPARING to READY to COMPLETED. Customers may cancel only their own PENDING order. Rejected, cancelled, and completed orders are terminal.
+**Reason:** This follows the master prompt's example sequence and makes rejection/cancellation explicit without allowing arbitrary status changes.
+
+### 32. Cash on Pickup is the sole Phase 7 payment method
+
+**Decision:** Store `CASH_ON_PICKUP` on every order; do not add payment-status state or payment processing.
+**Reason:** The master prompt specifies Cash on Pickup as the initial method and defers online payment functionality.

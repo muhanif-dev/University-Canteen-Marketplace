@@ -1,9 +1,21 @@
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { ValidationError as YupValidationError } from "yup";
 
 import { AppError } from "@/lib/errors";
 
 export function handleApiError(error: unknown) {
+  if (error instanceof mongoose.Error.VersionError) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "This record changed in another request. Reload and try again.",
+        code: "CONCURRENT_UPDATE",
+      },
+      { status: 409 }
+    );
+  }
+
   if (error instanceof SyntaxError) {
     return NextResponse.json(
       {

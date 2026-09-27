@@ -38,6 +38,7 @@ export default async function CanteenOwnerDashboardPage() {
           <Button asChild variant="outline"><Link href="/canteen-owner/profile">Manage profile</Link></Button>
           <Button asChild variant="outline"><Link href="/canteen-owner/categories">Categories</Link></Button>
           <Button asChild variant="outline"><Link href="/canteen-owner/products">Products</Link></Button>
+          <Button asChild variant="outline"><Link href="/canteen-owner/orders">Orders</Link></Button>
         </div>
       </div>
       {canteen ? (

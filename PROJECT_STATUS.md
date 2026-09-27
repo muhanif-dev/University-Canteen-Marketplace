@@ -1,6 +1,6 @@
 # Project Status
 
-## Current Phase: Phase 6 — Marketplace (Complete)
+## Current Phase: Phase 7 — Cart & Orders (Complete)
 
 ## Phase 1 — Foundation (Complete)
 
@@ -82,6 +82,19 @@
 - Added public marketplace browsing, canteen detail, and product detail pages. Product search is case-insensitive and safely escaped; filters cover canteen and category.
 - Product images and canteen logo/cover are displayed only as HTTP(S) URLs. No upload provider or secret is required.
 - Cart, checkout, orders, payments, notifications, reviews, ratings, and analytics remain out of scope.
+
+## Phase 7 — Cart & Orders (Complete)
+
+- Added one authenticated cart per active STUDENT/FACULTY account; cart lines reference products and store quantity only.
+- A cart is limited to products from one canteen. Current product prices and discounts are resolved from MongoDB for cart summaries and again during checkout.
+- Added cart APIs for retrieval, item add/update/removal, and clear; all user identity comes from the server session.
+- Added order creation, customer order history/detail/cancellation APIs, and owner order list/detail/status APIs.
+- Order items snapshot product/category names, image URL, original/effective unit prices, quantities, and subtotals; the canteen name is also snapshotted.
+- Checkout reserves stock with conditional atomic decrements inside a MongoDB transaction, creates a PENDING order with customer type derived from the active User record and CASH_ON_PICKUP, and clears the cart in the same transaction.
+- Pending customer cancellation and owner rejection restore stock transactionally. Owners can transition PENDING → ACCEPTED or REJECTED → (terminal), ACCEPTED → PREPARING → READY → COMPLETED; customers may cancel only their own PENDING orders.
+- Added cart, checkout, customer order history/detail, and canteen owner order management screens. Cash on Pickup is the only payment method; no payment collection is implemented.
+- MongoDB transactions require a replica set or mongos. The workspace has no MongoDB configuration, so transaction-backed operations could not be run against a database here; unsupported transaction deployments fail without applying partial changes.
+- Notifications and all later-phase features remain out of scope.
 
 ## Project Structure
 
@@ -173,7 +186,6 @@ All checks pass:
 
 ## Remaining Work
 
-- Phase 7: Cart and orders.
 - Phase 8: Notifications.
 - Phase 9: Professional improvements, testing, security, and deployment.
 
@@ -194,3 +206,11 @@ All checks pass:
 - Public marketplace shell and product detail shell pages: HTTP 200.
 - Yup validation: valid sample category/product accepted; empty, too-short, and overlong category names; negative price; invalid category ID; discount above price; and unsafe image protocol rejected.
 - Database-backed CRUD and marketplace data checks require a configured MongoDB and authenticated owner session; none are available in this workspace.
+
+## Phase 7 Verification
+
+- Type check (`npm run type-check`): pass
+- Lint (`npm run lint`): pass
+- Production build (`npm run build`): pass
+- Unauthenticated cart, customer order, and owner order API requests (GET and mutations): rejected with HTTP 401.
+- Database-backed cart, order, stock, authorization, and transaction checks require MongoDB and authenticated test sessions; neither is configured in this workspace.

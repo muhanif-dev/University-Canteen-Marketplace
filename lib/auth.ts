@@ -4,7 +4,13 @@ import { cookies } from "next/headers";
 import { connectDB } from "@/lib/db";
 import { AppError, ForbiddenError, UnauthorizedError } from "@/lib/errors";
 import { User } from "@/models/user";
-import { ACCOUNT_STATUS, ROLES, type Role } from "@/types";
+import {
+  ACCOUNT_STATUS,
+  CUSTOMER_TYPE,
+  ROLES,
+  type CustomerType,
+  type Role,
+} from "@/types";
 
 const SESSION_COOKIE = "auth-session";
 const SESSION_EXPIRY = "7d";
@@ -125,4 +131,37 @@ export async function requireActiveCanteenOwner(): Promise<{
   }
 
   return { session, user };
+}
+
+export async function requireActiveCustomer(): Promise<{
+  session: SessionPayload;
+  user: InstanceType<typeof User>;
+  customerType: CustomerType;
+}> {
+  const session = await requireRole([ROLES.STUDENT, ROLES.FACULTY]);
+  await connectDB();
+  const user = await User.findById(session.userId);
+
+  if (!user) {
+    throw new UnauthorizedError("User account not found");
+  }
+
+  if (user.status !== ACCOUNT_STATUS.ACTIVE) {
+    throw new ForbiddenError(
+      "Only active students and faculty members can use shopping features."
+    );
+  }
+
+  const customerType =
+    user.role === ROLES.STUDENT
+      ? CUSTOMER_TYPE.STUDENT
+      : user.role === ROLES.FACULTY
+        ? CUSTOMER_TYPE.FACULTY
+        : null;
+
+  if (!customerType) {
+    throw new ForbiddenError("Only students and faculty members can use shopping features.");
+  }
+
+  return { session, user, customerType };
 }
