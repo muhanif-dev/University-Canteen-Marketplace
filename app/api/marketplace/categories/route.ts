@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
 import { apiSuccess, handleApiError } from "@/lib/api";
+import { requireActiveCustomer } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Canteen } from "@/models/canteen";
 import { Category } from "@/models/category";
@@ -10,6 +11,7 @@ export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   try {
+    await requireActiveCustomer();
     await connectDB();
     const canteenId = request.nextUrl.searchParams.get("canteenId");
     const activeCanteens = await Canteen.find({ isApproved: true, isActive: true }).distinct("_id");

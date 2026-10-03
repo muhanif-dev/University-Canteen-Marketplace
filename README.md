@@ -8,7 +8,7 @@ A Next.js marketplace and ordering platform for university canteens. Students an
 - Registration and super-admin approval for students, faculty, and canteen owners
 - Role-based access control and server-side ownership checks
 - Canteen profile, category, product, stock, and availability management
-- Public marketplace browsing and product search
+- Approved student/faculty marketplace browsing and product search
 - One-canteen cart, server-priced checkout, and cash on pickup
 - Customer order history and cancellation of pending orders
 - Owner order workflow and transactional stock reservation/restoration
@@ -20,9 +20,9 @@ Online payments, email/SMS delivery, image uploads, and real-time push are not i
 
 - **Super Admin:** reviews registration requests. Admin accounts are not publicly registrable; provision an active `SUPER_ADMIN` account securely in MongoDB.
 - **Canteen Owner:** manages only their own canteen, products, categories, and orders.
-- **Student / Faculty:** browse, shop, and manage only their own cart and orders.
+- **Student / Faculty:** after approval, browse and shop; manage only their own cart and orders.
 
-New registrations require approval before protected shopping or management access is available.
+New registrations require approval before marketplace, shopping, or management access is available. The marketplace pages and catalog APIs require an authenticated active student or faculty account.
 
 ## Tech stack
 
@@ -72,7 +72,7 @@ npm audit
 
 ## Database
 
-The app uses MongoDB through Mongoose. Local development may use a standalone MongoDB for non-transactional features. Checkout, stock changes, order status events, and notifications use MongoDB transactions and require a replica set or mongos; MongoDB Atlas provides a suitable managed deployment option. Transaction flows have not been verified against a live database in this workspace.
+The app uses MongoDB through Mongoose. Checkout, stock changes, order status events, and notifications use MongoDB transactions and require a replica set or mongos; MongoDB Atlas provides a suitable managed deployment option. The local MongoDB service was configured as a single-node `rs0` replica set, and the application's transaction helper passed a read-only transaction probe. A real checkout was not submitted during that probe.
 
 ## Deployment
 
@@ -84,4 +84,4 @@ Passwords are bcrypt-hashed. Sessions use signed JWTs in HTTP-only cookies, with
 
 ## Limitations and verification
 
-No `.env` or MongoDB service/test accounts were available during finalization. The test suite covers pure validation rules and password hashing; live registration/approval, authenticated UI flows, cross-user IDOR checks, database indexes, and transaction rollback/concurrency still require a replica-set database and safe test accounts. This repository is deployment-prepared but has not been deployed.
+The test suite covers pure validation rules and password hashing. Live registration/approval, authenticated UI flows, cross-user IDOR checks, database indexes, and transaction rollback/concurrency require a replica-set database and safe test accounts. This repository is deployment-prepared but has not been deployed.

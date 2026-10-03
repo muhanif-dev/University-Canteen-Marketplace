@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 
-import { LogoutButton } from "@/components/auth/logout-button";
-import { NotificationBell } from "@/components/notifications/notification-bell";
-import { getSession } from "@/lib/auth";
+import { SiteHeader } from "@/components/site-header";
+import { getNavigationUser } from "@/lib/page-access";
 
 import "./globals.css";
 
@@ -29,7 +27,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getSession();
+  const user = await getNavigationUser();
 
   return (
     <html
@@ -37,23 +35,7 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {session && (
-          <header className="border-b bg-background">
-            <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-4 sm:px-6">
-              <Link href="/marketplace" className="font-semibold tracking-tight">
-                <span className="sm:hidden">Canteen Market</span>
-                <span className="hidden sm:inline">University Canteen Marketplace</span>
-              </Link>
-              <div className="flex items-center gap-2">
-                <Link href="/notifications" className="hidden text-sm text-muted-foreground hover:text-foreground sm:inline">
-                  Notifications
-                </Link>
-                <NotificationBell />
-                <LogoutButton />
-              </div>
-            </div>
-          </header>
-        )}
+        <SiteHeader user={user} />
         {children}
       </body>
     </html>

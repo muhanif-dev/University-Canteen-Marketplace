@@ -35,7 +35,11 @@ export function LoginForm() {
           );
           const role = response.data.data.user.role;
           router.replace(
-            role === ROLES.CANTEEN_OWNER ? "/canteen-owner/dashboard" : "/marketplace"
+            role === ROLES.CANTEEN_OWNER
+              ? "/canteen-owner/dashboard"
+              : role === ROLES.SUPER_ADMIN
+                ? "/admin/registrations"
+                : "/marketplace"
           );
           router.refresh();
         } catch (cause) {

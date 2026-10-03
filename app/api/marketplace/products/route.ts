@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import mongoose from "mongoose";
 
 import { apiSuccess, handleApiError } from "@/lib/api";
+import { requireActiveCustomer } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { ValidationError } from "@/lib/errors";
 import { Canteen } from "@/models/canteen";
@@ -15,6 +16,7 @@ const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$
 
 export async function GET(request: NextRequest) {
   try {
+    await requireActiveCustomer();
     await connectDB();
     const raw = Object.fromEntries(request.nextUrl.searchParams.entries());
     const query = await marketplaceQuerySchema.validate(raw, {
