@@ -133,6 +133,7 @@
 - API route and ownership boundaries received source review; cross-account runtime tests require configured database fixtures and remain unverified.
 - Follow-up access adjustment: marketplace pages and all catalog APIs now require an active STUDENT/FACULTY account; added account-status guidance and role-aware navigation including Super Admin registration review.
 - Local database follow-up: MongoDB Windows service is now configured as a single-node `rs0` replica set. Topology check confirmed an elected primary, and the application's transaction helper completed a read-only transaction. No order/cart/stock data was changed by the probe; a real checkout and owner UI status update still need the user's active cart/session to verify end-to-end.
+- Deployment preparation: declared Node.js support is `>=20.19.0 <25`, `.env.example` documents the local replica-set URI and secret generation, and README now contains Vercel + Atlas setup guidance. Live deployment remains pending Vercel/Atlas account setup and environment variables.
 
 ## Project Structure
 

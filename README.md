@@ -44,14 +44,14 @@ validations/  Server-side Yup request schemas
 
 ## Local setup
 
-Use a supported Node.js release and npm. Install dependencies and copy `.env.example` to `.env`, then set:
+Use Node.js 20.19 or newer (the Vercel project can use Node.js 24) and npm. Install dependencies and copy `.env.example` to `.env`, then set:
 
 ```env
-MONGODB_URI=mongodb://127.0.0.1:27017/university-canteen
+MONGODB_URI=mongodb://127.0.0.1:27017/university-canteen?replicaSet=rs0
 AUTH_SECRET=<at-least-32-random-bytes>
 ```
 
-Generate a secret with `openssl rand -base64 48`. Do not commit `.env` or use a placeholder secret for a real deployment. `CLOUDINARY_*` entries are optional placeholders for a future integration and are not read by the current application.
+Generate a secret locally with `node -e "console.log(require('node:crypto').randomBytes(48).toString('base64'))"`. Do not commit `.env` or use a placeholder secret for a real deployment. `CLOUDINARY_*` entries are optional placeholders for a future integration and are not read by the current application.
 
 ```bash
 npm install
@@ -74,9 +74,19 @@ npm audit
 
 The app uses MongoDB through Mongoose. Checkout, stock changes, order status events, and notifications use MongoDB transactions and require a replica set or mongos; MongoDB Atlas provides a suitable managed deployment option. The local MongoDB service was configured as a single-node `rs0` replica set, and the application's transaction helper passed a read-only transaction probe. A real checkout was not submitted during that probe.
 
-## Deployment
+## Deployment: Vercel + MongoDB Atlas
 
-The intended deployment is the Next.js application on Vercel backed by MongoDB Atlas. Configure `MONGODB_URI` and a unique strong `AUTH_SECRET` in Vercel's environment variables for each environment. Configure the same variables in local `.env` for development. No Vercel deployment has been performed.
+The application uses Vercel's standard Next.js build and does not need a custom `vercel.json`. The local `.env` and `.vercel` directories are ignored by Git. Do not commit Atlas credentials or the production `AUTH_SECRET`.
+
+1. Create an Atlas cluster. Create a database user with read/write access only to the application database, then copy the driver connection string from Atlas. Encode special characters in the database username/password as required by MongoDB's connection string format.
+2. Confirm Atlas network access for Vercel. Vercel deployments use dynamic outbound IPs; the Atlas/Vercel integration currently requires an Atlas IP access list entry for all IPs (`0.0.0.0/0`). This widens network reachability, so use a unique database credential with least-privilege access. Choose a supported static-egress or private connectivity option if your account and security requirements allow it. See MongoDB's [Atlas/Vercel integration guide](https://www.mongodb.com/docs/atlas/reference/partner-integrations/vercel/) and [Atlas connection requirements](https://www.mongodb.com/docs/atlas/connect-to-database-deployment/).
+3. Import `muhanif-dev/University-Canteen-Marketplace` into Vercel from GitHub. Keep the detected Next.js framework, root directory, install command, and build command (`npm run build`). Set the project Node.js version to 24.x (or another version meeting `>=20.19.0 <25`). Vercel documents [Git deployments](https://vercel.com/docs/deployments/git) and [supported Node.js versions](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions).
+4. In Vercel Project Settings → Environment Variables, add `MONGODB_URI` and `AUTH_SECRET` for Production. Use the Atlas URI with the application database name. Generate a new production secret locally with the Node command above; do not reuse the local `.env` secret. Vercel environment variables are configured per environment; see [Vercel environment variables](https://vercel.com/docs/environment-variables).
+5. If Preview deployments are enabled, give Preview its own `MONGODB_URI` targeting a separate preview database and its own `AUTH_SECRET`. Do not point previews at production data.
+6. Trigger a Preview deployment first. Check that the build completes, `/` and `/login` load, and guest access to `/marketplace` redirects to sign-in. Then promote/deploy `main` to Production.
+7. Create or securely provision an active `SUPER_ADMIN` account in the Atlas database; the local MongoDB account is not copied to Atlas. Sign in and review registrations, then verify with approved test accounts. Avoid real customer orders while validating.
+
+Checkout, stock updates, and order notifications require MongoDB transactions. Atlas clusters support replica-set transactions; do not substitute a standalone MongoDB deployment for production. No Vercel deployment has been performed yet.
 
 ## Security
 
